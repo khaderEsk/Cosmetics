@@ -16,7 +16,6 @@ class AuthController extends Controller
 {
     use GeneralTrait;
 
-    private $uploadPath = "assets/images/users";
 
 
     public function login(LoginRequest $request)
@@ -24,15 +23,15 @@ class AuthController extends Controller
         $credentials = $request->only(['email', 'password']);
         $token = JWTAuth::attempt($credentials);
 
-        $exist=User::where('email',$request->email)->first();
-        if($exist && !$token)
-            return $this->returnError(401,__('backend.The password is wrong', [], app()->getLocale()));
+        $exist = User::where('email', $request->email)->first();
+        if ($exist && !$token)
+            return $this->returnError(401, __('backend.The password is wrong', [], app()->getLocale()));
 
         if (!$token)
-            return $this->returnError(401,__('backend.Account Not found', [], app()->getLocale()));
+            return $this->returnError(401, __('backend.Account Not found', [], app()->getLocale()));
 
         if (isset($exist->block))
-            return $this->returnError(401,__('backend.You are block', [], app()->getLocale()));
+            return $this->returnError(401, __('backend.You are block', [], app()->getLocale()));
 
         $user = auth()->user();
         $user->token = $token;
@@ -47,30 +46,25 @@ class AuthController extends Controller
     {
 
         $user = User::create([
-            'name'           => $request->name,
-            'email'          => $request->email,
-            'password'       => $request->password,
-            'address'         => $request->address,
-            'governorate'    => $request->governorate,
-            'birth_date'     => $request->birth_date
+            'firstName'           => $request->firstName,
+            'lastName'          => $request->lastName,
+            'email'       => $request->email,
+            'password'        => $request->password,
+            'phone'    => $request->phone,
+            'point' => 0
         ]);
 
         $credentials = ['email' => $user->email, 'password' => $request->password];
         $token = JWTAuth::attempt($credentials);
         $user->token = $token;
 
-        $role = Role::where('id', '=', $request->role_id)->first();
-        if(!$role)
-            return $this->returnError(404,'Role Not found');
+        $role = Role::where('id', '=', 1)->first();
+        if (!$role)
+            return $this->returnError(404, 'Role Not found');
         $user->assignRole($role);
-        $user->loadMissing(['roles']);
+        // $user->loadMissing(['roles']);
         if (!$token)
             return $this->returnError(401, 'Unauthorized');
-        $wallet = Wallet::create([
-            'user_id' => $user->id,
-            'number' => random_int(1000000000000, 9000000000000),
-            'value' => 0,
-        ]);
         return $this->returnData($user, __('backend.operation completed successfully', [], app()->getLocale()));
     }
 
@@ -89,59 +83,4 @@ class AuthController extends Controller
             return $this->returnError("400", 'some thing went wrongs');
         }
     }
-
-
-    public function deleteMyAccount()
-    {
-        try {
-            $user = auth()->user();
-            if($user->image)
-                $this->deleteImage($user->image);
-            $user->delete();
-
-        } catch (\Exception $ex) {
-            return $this->returnError("500",'Please try again later');
-        }
-    }
-
-    public function refreshToken(Request $request)
-    {
-        try {
-            $user_id = $request->user_id;
-            $fcm_token = $request->fcm_token;
-            $user = User::find($user_id);
-            if(!$user)
-                return $this->returnError('404', 'Not found');
-            $user->update([
-                'fcm_token' => $fcm_token
-            ]);
-
-            return $this->returnData($user, __('backend.operation completed successfully', [], app()->getLocale()));
-        }
-        catch (\Exception $e)
-        {
-            return $this->returnError("500",'Please try again later');
-        }
-    }
-
-    public function test()
-    {
-        $user=auth()->user();
-        //dispatch(new SendFcmNotification($user->id,"message","title"));
-//        $SERVER_KEY=env('FCM_SERVER_KEY');
-//        $fcm=Http::acceptJson()->withToken($SERVER_KEY)
-//            ->post('https://fcm.googleapis.com/fcm/send',
-//                [
-//                    'to'=>$user->fcm_token,
-//                    'notification'=>
-//                        [
-//                            'title'=>"title",
-//                            'body'=>"message"
-//                        ]
-//                ]);
-        $fcm=$this->send($user,"title","message",'basic');
-        return $fcm;
-        //return $this->returnSuccessMessage('operation completed successfully');
-    }
-
 }

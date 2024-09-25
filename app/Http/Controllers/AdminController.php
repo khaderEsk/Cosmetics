@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Wallet;
+use App\Models\User;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
-class WalletController extends Controller
+class AdminController extends Controller
 {
+
+    use GeneralTrait;
+
     /**
      * Display a listing of the resource.
      */
-    use GeneralTrait;
     public function index()
     {
-        $wallet = Wallet::with('user')->get();
-        return $this->returnData($wallet, __('backend.operation completed successfully', [], app()->getLocale()));
+        try {
+            $user = User::whereHas('roles', function ($query) {
+                $query->where('id', 1);
+            })->get();
+            return $this->returnData($user, __('backend.operation completed successfully', [], app()->getLocale()));
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return $this->returnError($e->getCode(), 'some thing went wrongs');
+        }
     }
 
     /**
@@ -38,19 +45,9 @@ class WalletController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show()
+    public function show(string $id)
     {
-        try {
-            $user = Auth::user();
-            $user->load('wallet');
-            $responseData = [
-                'name' => $user->name,
-                'wallet' => $user->wallet
-            ];
-            return $this->returnData($responseData, 'operation completed successfully');
-        } catch (\Exception $ex) {
-            return $this->returnError("500", $ex->getMessage());
-        }
+        //
     }
 
     /**

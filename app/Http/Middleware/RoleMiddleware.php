@@ -6,33 +6,37 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Traits\GeneralTrait;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use Spatie\Permission\Contracts\Role;
 
 class RoleMiddleware
 {
-    Use GeneralTrait;
+    use GeneralTrait;
 
-
-    public function handle(Request $request, Closure $next,$role)
+    public function handle(Request $request, Closure $next, $role)
     {
         try {
-
-            $user=Auth::user();
-
-            $roles = is_array($role)
-                ? $role
-                : explode('|', $role);
-
-            foreach ($roles as $role) {
-                if($user->hasRole($role))
-                    return $next($request);
+            // تحقق مما إذا كان المستخدم مسجل الدخول
+            if (!Auth::check()) {
+                return $this->returnError('401', 'You must be logged in to access this resource');
             }
 
+            // الحصول على المستخدم الحالي
+            $user = Auth::user();
 
-        }catch (\Exception $e){
-            return $this->returnError('512', "you dont have the right role");
+            // معالجة الأدوار في حالة ما إذا كانت كـ string أو array
+            $roles = is_array($role) ? $role : explode('|', $role);
+
+            // التحقق مما إذا كان لدى المستخدم أي دور من الأدوار المحددة
+            foreach ($roles as $role) {
+                if ($user->hasRole($role)) {
+                    return $next($request); // السماح بالوصول إذا كان لديه الدور المطلوب
+                }
+            }
+
+        } catch (\Exception $e) {
+            return $this->returnError('512', "An error occurred: " . $e->getMessage());
         }
-        return $this->returnError('512', "you dont have the right role");
+
+        // في حال عدم امتلاك المستخدم للدور المطلوب
+        return $this->returnError('403', "You don't have the right role");
     }
 }

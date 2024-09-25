@@ -13,20 +13,17 @@ class AdminSeed extends Seeder
     public function run(): void
     {
         DB::table('users')->insert([
-            'name' => 'ali',
-            'email' => 'ali1@gmail.com',
+            'firstName' => 'george',
+            'lastName' => 'zagh',
+            'email' => 'george0@gmail.com',
             'password' => bcrypt('12341234a'),
+            'phone' => '0987654321',
+            'point' => 0
         ]);
 
-        $admin=User::find(1);
+        $admin = User::find(1);
 
-        $role = Role::where('name','admin')->first();
+        $role = Role::where('name', 'admin')->first();
         $admin->assignRole($role);
-
-        $wallet = Wallet::create([
-            'user_id' => $admin->id,
-            'number' => random_int(1000000000000, 9000000000000),
-            'value' => 0,
-        ]);
     }
 }

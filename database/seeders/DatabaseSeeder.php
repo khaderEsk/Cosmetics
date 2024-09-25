@@ -25,9 +25,5 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class
         );
         $this->call(AdminSeed::class);
-//        User::factory()
-//            ->count(100)
-//            ->has(ProfileStudent::factory()->count(1), 'profile_student')
-//            ->create();
     }
 }
