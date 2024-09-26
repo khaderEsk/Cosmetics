@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class
         );
         $this->call(AdminSeed::class);
+        $this->call(ProductSeed::class);
     }
 }
