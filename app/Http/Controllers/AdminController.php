@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use App\Models\User;
 use App\Traits\GeneralTrait;
 use Illuminate\Http\Request;
@@ -26,12 +27,43 @@ class AdminController extends Controller
         }
     }
 
+
+    public function getProductsWithFavorites()
+    {
+        try {
+            $products = Product::with(['favoritedByUsers' => function ($query) {
+                $query->select('users.id', 'users.firstName', 'users.lastName'); // اختر الحقول المطلوبة من المستخدمين
+            }])->get();
+
+            // إضافة عدد المستخدمين الذين قاموا بتفضيل كل منتج
+            $products->map(function ($product) {
+                $product->favorites_count = $product->favoritedByUsers->count();
+                return $product;
+            });
+            return $this->returnData($products, __('backend.operation completed successfully', [], app()->getLocale()));
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return $this->returnError($e->getCode(), 'some thing went wrongs');
+        }
+    }
+
+
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function addPoint($id)
     {
-        //
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return $this->returnError(404, __('not found', [], app()->getLocale()));
+            }
+            $user->update([
+                'point' => $user->point + 1
+            ]);
+            return $this->returnData(200, __('backend.operation completed successfully', [], app()->getLocale()));
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            return $this->returnError($e->getCode(), 'some thing went wrongs');
+        }
     }
 
     /**

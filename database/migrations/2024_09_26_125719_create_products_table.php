@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('imageCenter');
             $table->string('imageLeft');
             $table->integer('price');
+            $table->integer('point');
             $table->timestamps();
         });
     }

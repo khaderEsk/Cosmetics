@@ -54,6 +54,14 @@ class User extends Authenticatable implements JWTSubject
     ];
 
 
+
+    public function favoriteProducts()
+    {
+        return $this->belongsToMany(Product::class, 'favorites')->withTimestamps();
+    }
+
+
+
     public function setPasswordAttribute($value)
     {
         $this->attributes['password'] = Hash::make($value);
