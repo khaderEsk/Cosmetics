@@ -37,6 +37,8 @@ Route::group(['middleware' => ['localization']], function () {
         Route::get('get-all', [ProductController::class, 'index']);
         Route::post('logout', [AuthController::class, 'logout']);
 
+
+        
         Route::group(['middleware' => ['hasRole:admin']], function () {
             Route::get('getAll', [AdminController::class, 'index']);
             Route::get('getProductsWithFavorites', [AdminController::class, 'getProductsWithFavorites']);
